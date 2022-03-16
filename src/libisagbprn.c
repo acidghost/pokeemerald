@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "gba/gba.h"
 #include "config.h"
+#include "printf.h"
 
 #define AGB_PRINT_FLUSH_ADDR 0x9FE209D
 #define AGB_PRINT_STRUCT_ADDR 0x9FE20F8
@@ -87,7 +88,7 @@ void AGBPrintf(const char *pBuf, ...)
     char bufPrint[0x100];
     va_list vArgv;
     va_start(vArgv, pBuf);
-    vsprintf(bufPrint, pBuf, vArgv);
+    vsnprintf(bufPrint, pBuf, vArgv);
     va_end(vArgv);
     AGBPrint(bufPrint);
 }
@@ -168,7 +169,7 @@ void NoCashGBAPrintf(const char *pBuf, ...)
     char bufPrint[0x100];
     va_list vArgv;
     va_start(vArgv, pBuf);
-    vsprintf(bufPrint, pBuf, vArgv);
+    vsnprintf(bufPrint, pBuf, vArgv);
     va_end(vArgv);
     NoCashGBAPrint(bufPrint);
 }
