@@ -37,6 +37,11 @@ Route117_EventScript_DaycareReceiveEgg::
 	waitbuttonpress
 	msgbox Route117_Text_TakeGoodCareOfIt, MSGBOX_DEFAULT
 	special GiveEggFromDaycare
+	goto_if_eq VAR_RESULT, TRUE, Route117_EventScript_DaycareReceiveEggEnd
+	playfanfare MUS_MOVE_DELETED
+	waitfanfare
+	msgbox Route117_Text_EggBroke, MSGBOX_DEFAULT
+Route117_EventScript_DaycareReceiveEggEnd:
 	clearflag FLAG_PENDING_DAYCARE_EGG
 	release
 	end
@@ -306,6 +311,10 @@ Route117_Text_ReceivedEgg:
 
 Route117_Text_TakeGoodCareOfIt:
 	.string "Take good care of it.$"
+
+Route117_Text_EggBroke:
+	.string "Your clumsy hands have\n"
+	.string "broken the egg!$"
 
 Route117_Text_FriendlyWithOtherTrainersMon:
 	.string "By the way, about your {STR_VAR_1},\n"

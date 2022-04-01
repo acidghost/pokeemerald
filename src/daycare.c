@@ -810,9 +810,21 @@ static void _GiveEggFromDaycare(struct DayCare *daycare)
     u16 species;
     u8 parentSlots[DAYCARE_MON_COUNT];
     bool8 isEgg;
+    u8 monotypeType;
 
     species = DetermineEggSpeciesAndParentSlots(daycare, parentSlots);
     AlterEggSpeciesWithIncenseItem(&species, daycare);
+
+    monotypeType = VarGet(VAR_MONOTYPE_TYPE);
+    if (monotypeType != TYPE_NONE && !IsSpeciesOrEvoOfType(species, monotypeType))
+    {
+        gSpecialVar_Result = FALSE;
+        RemoveEggFromDayCare(daycare);
+        return;
+    }
+    else
+        gSpecialVar_Result = TRUE;
+
     SetInitialEggData(&egg, species, daycare);
     InheritIVs(&egg, daycare);
     BuildEggMoveset(&egg, &daycare->mons[parentSlots[1]].mon, &daycare->mons[parentSlots[0]].mon);

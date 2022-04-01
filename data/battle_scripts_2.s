@@ -110,6 +110,12 @@ BattleScript_TrainerBallBlock::
 	waitmessage B_WAIT_TIME_LONG
 	finishaction
 
+BattleScript_MonoPokeBallBlock::
+	waitmessage B_WAIT_TIME_LONG
+	printstring STRINGID_ITDODGEDBALL
+	waitmessage B_WAIT_TIME_LONG
+	finishaction
+
 BattleScript_PlayerUsesItem::
 	moveendcase MOVEEND_MIRROR_MOVE
 	end

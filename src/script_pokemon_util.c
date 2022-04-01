@@ -64,6 +64,11 @@ u8 ScriptGiveMon(u16 species, u8 level, u16 item, u32 unused1, u32 unused2, u8 u
     int sentToPc;
     u8 heldItem[2];
     struct Pokemon mon;
+    u8 monotypeType;
+
+    monotypeType = VarGet(VAR_MONOTYPE_TYPE);
+    if (monotypeType != TYPE_NONE && !IsSpeciesOrEvoOfType(species, monotypeType))
+        return MON_TYPE_WRONG;
 
     CreateMon(&mon, species, level, USE_RANDOM_IVS, FALSE, 0, OT_ID_PLAYER_ID, 0);
     heldItem[0] = item;
@@ -88,6 +93,11 @@ u8 ScriptGiveEgg(u16 species)
 {
     struct Pokemon mon;
     u8 isEgg;
+    u8 monotypeType;
+
+    monotypeType = VarGet(VAR_MONOTYPE_TYPE);
+    if (monotypeType != TYPE_NONE && !IsSpeciesOrEvoOfType(species, monotypeType))
+        return MON_TYPE_WRONG;
 
     CreateEgg(&mon, species, TRUE);
     isEgg = TRUE;

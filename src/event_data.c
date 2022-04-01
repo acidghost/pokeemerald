@@ -38,6 +38,7 @@ void InitEventData(void)
 {
     memset(gSaveBlock1Ptr->flags, 0, sizeof(gSaveBlock1Ptr->flags));
     memset(gSaveBlock1Ptr->vars, 0, sizeof(gSaveBlock1Ptr->vars));
+    VarSet(VAR_MONOTYPE_TYPE, TYPE_NONE);
     memset(gSpecialFlags, 0, sizeof(gSpecialFlags));
 }
 

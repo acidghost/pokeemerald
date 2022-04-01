@@ -1,9 +1,11 @@
 #include "global.h"
 #include "main.h"
+#include "battle_main.h"
 #include "event_data.h"
 #include "field_effect.h"
 #include "field_specials.h"
 #include "item.h"
+#include "list_menu.h"
 #include "menu.h"
 #include "palette.h"
 #include "script.h"
@@ -24,6 +26,36 @@ static EWRAM_DATA u8 sProcessInputDelay = 0;
 
 static u8 sLilycoveSSTidalSelections[SSTIDAL_SELECTION_COUNT];
 
+static const struct ListMenuItem sSet_AllTypes[] =
+{
+    {gTypeNames[TYPE_BUG],      TYPE_BUG},
+    {gTypeNames[TYPE_DARK],     TYPE_DARK},
+    {gTypeNames[TYPE_DRAGON],   TYPE_DRAGON},
+    {gTypeNames[TYPE_ELECTRIC], TYPE_ELECTRIC},
+    {gTypeNames[TYPE_FIGHTING], TYPE_FIGHTING},
+    {gTypeNames[TYPE_FIRE],     TYPE_FIRE},
+    {gTypeNames[TYPE_FLYING],   TYPE_FLYING},
+    {gTypeNames[TYPE_GHOST],    TYPE_GHOST},
+    {gTypeNames[TYPE_GRASS],    TYPE_GRASS},
+    {gTypeNames[TYPE_GROUND],   TYPE_GRASS},
+    {gTypeNames[TYPE_ICE],      TYPE_ICE},
+    {gTypeNames[TYPE_NORMAL],   TYPE_NORMAL},
+    {gTypeNames[TYPE_POISON],   TYPE_POISON},
+    {gTypeNames[TYPE_PSYCHIC],  TYPE_PSYCHIC},
+    {gTypeNames[TYPE_ROCK],     TYPE_ROCK},
+    {gTypeNames[TYPE_STEEL],    TYPE_STEEL},
+    {gTypeNames[TYPE_WATER],    TYPE_WATER},
+};
+
+struct
+{
+    const struct ListMenuItem *set;
+    int count;
+} static const sScrollingSets[] =
+{
+    {sSet_AllTypes, ARRAY_COUNT(sSet_AllTypes)},
+};
+
 static void Task_HandleMultichoiceInput(u8 taskId);
 static void Task_HandleYesNoInput(u8 taskId);
 static void Task_HandleMultichoiceGridInput(u8 taskId);
@@ -35,6 +67,24 @@ static void CreateLilycoveSSTidalMultichoice(void);
 static bool8 IsPicboxClosed(void);
 static void CreateStartMenuForPokenavTutorial(void);
 static void InitMultichoiceNoWrap(bool8 ignoreBPress, u8 unusedCount, u8 windowId, u8 multichoiceId);
+
+static void Task_ScrollingMultichoiceInput(u8 taskId);
+
+static const struct ListMenuTemplate sMultichoiceListTemplate =
+{
+    .header_X = 0,
+    .item_X = 8,
+    .cursor_X = 0,
+    .upText_Y = 1,
+    .cursorPal = 2,
+    .fillValue = 1,
+    .cursorShadowPal = 3,
+    .lettersSpacing = 1,
+    .itemVerticalPadding = 0,
+    .scrollMultiple = LIST_NO_MULTIPLE_SCROLL,
+    .fontId = 1,
+    .cursorKind = 0
+};
 
 bool8 ScriptMenu_Multichoice(u8 left, u8 top, u8 multichoiceId, bool8 ignoreBPress)
 {
@@ -763,4 +813,71 @@ int ScriptMenu_AdjustLeftCoordFromWidth(int left, int width)
     }
 
     return adjustedLeft;
+}
+
+// 0x8004 = set id
+// 0x8005 = window X
+// 0x8006 = window y
+// 0x8007 = showed at once
+// 0x8008 = Allow B press
+void ScriptMenu_ScrollingMultichoice(void)
+{
+    int i, windowId, taskId, width = 0;
+    int setId = gSpecialVar_0x8004;
+    int left = gSpecialVar_0x8005;
+    int top = gSpecialVar_0x8006;
+    int maxShowed = gSpecialVar_0x8007;
+
+    for (i = 0; i < sScrollingSets[setId].count; i++)
+        width = DisplayTextAndGetWidth(sScrollingSets[setId].set[i].name, width);
+
+    width = ConvertPixelWidthToTileWidth(width);
+    left = ScriptMenu_AdjustLeftCoordFromWidth(left, width);
+    windowId = CreateWindowFromRect(left, top, width, maxShowed * 2);
+    SetStandardWindowBorderStyle(windowId, 0);
+    CopyWindowToVram(windowId, 3);
+
+    gMultiuseListMenuTemplate = sMultichoiceListTemplate;
+    gMultiuseListMenuTemplate.windowId = windowId;
+    gMultiuseListMenuTemplate.items = sScrollingSets[setId].set;
+    gMultiuseListMenuTemplate.totalItems = sScrollingSets[setId].count;
+    gMultiuseListMenuTemplate.maxShowed = maxShowed;
+
+    taskId = CreateTask(Task_ScrollingMultichoiceInput, 0);
+    gTasks[taskId].data[0] = ListMenuInit(&gMultiuseListMenuTemplate, 0, 0);
+    gTasks[taskId].data[1] = gSpecialVar_0x8008;
+    gTasks[taskId].data[2] = windowId;
+}
+
+static void Task_ScrollingMultichoiceInput(u8 taskId)
+{
+    bool32 done = FALSE;
+    s32 input = ListMenu_ProcessInput(gTasks[taskId].data[0]);
+
+    switch (input)
+    {
+    case LIST_HEADER:
+    case LIST_NOTHING_CHOSEN:
+        break;
+    case LIST_CANCEL:
+        if (gTasks[taskId].data[1])
+        {
+            gSpecialVar_Result = 0x7F;
+            done = TRUE;
+        }
+        break;
+    default:
+        gSpecialVar_Result = input;
+        done = TRUE;
+        break;
+    }
+
+    if (done)
+    {
+        DestroyListMenuTask(gTasks[taskId].data[0], NULL, NULL);
+        ClearStdWindowAndFrame(gTasks[taskId].data[2], TRUE);
+        RemoveWindow(gTasks[taskId].data[2]);
+        EnableBothScriptContexts();
+        DestroyTask(taskId);
+    }
 }

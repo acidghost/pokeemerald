@@ -26,6 +26,7 @@
 #include "pokemon_icon.h"
 #include "trainer_pokemon_sprites.h"
 #include "contest_util.h"
+#include "battle_main.h"
 #include "constants/songs.h"
 #include "constants/game_stat.h"
 #include "constants/battle_frontier.h"
@@ -82,6 +83,7 @@ struct TrainerCardData
     u16 bgTilemapBuffer[0x1000];
     u16 cardTop;
     u8 language;
+    u8 monotypeType;
 };
 
 // EWRAM
@@ -1013,7 +1015,14 @@ static void PrintIdOnCard(void)
     s32 xPos;
     u32 top;
     txtPtr = StringCopy(buffer, gText_TrainerCardIDNo);
-    ConvertIntToDecimalStringN(txtPtr, sData->trainerCard.trainerId, STR_CONV_MODE_LEADING_ZEROS, 5);
+    txtPtr = ConvertIntToDecimalStringN(txtPtr, sData->trainerCard.trainerId, STR_CONV_MODE_LEADING_ZEROS, 5);
+
+    if (sData->monotypeType != TYPE_NONE)
+    {
+        txtPtr = StringCopy(txtPtr, gText_Slash);
+        txtPtr = StringCopy(txtPtr, gTypeNames[sData->monotypeType]);
+    }
+
     if (sData->cardType == CARD_TYPE_FRLG)
     {
         xPos = GetStringCenterAlignXOffset(FONT_NORMAL, buffer, 80) + 132;
@@ -1803,6 +1812,7 @@ void ShowPlayerTrainerCard(void (*callback)(void))
         sData->isLink = FALSE;
 
     sData->language = GAME_LANGUAGE;
+    sData->monotypeType = VarGet(VAR_MONOTYPE_TYPE);
     TrainerCard_GenerateCardForPlayer(&sData->trainerCard);
     SetMainCallback2(CB2_InitTrainerCard);
 }

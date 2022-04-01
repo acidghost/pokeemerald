@@ -246,6 +246,11 @@ LavaridgeTown_EventScript_EggWoman::
 	message LavaridgeTown_Text_ReceivedTheEgg
 	waitfanfare
 	giveegg SPECIES_WYNAUT
+	goto_if_ne VAR_RESULT, MON_TYPE_WRONG, LavaridgeTown_EventScript_EggWomanEnd
+	playfanfare MUS_MOVE_DELETED
+	waitfanfare
+	msgbox LavaridgeTown_Text_EggBroke, MSGBOX_DEFAULT
+LavaridgeTown_EventScript_EggWomanEnd:
 	release
 	end
 
@@ -339,6 +344,9 @@ LavaridgeTown_Text_HopeYoullWalkPlentyWithEgg:
 
 LavaridgeTown_Text_ReceivedTheEgg:
 	.string "{PLAYER} received the EGG.$"
+
+LavaridgeTown_Text_EggBroke:
+	.string "Oh well, omelette anyone?$"
 
 LavaridgeTown_Text_NoRoomForThisEgg:
 	.string "Oh? You've too many POKéMON.\n"

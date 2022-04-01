@@ -143,11 +143,19 @@ RustboroCity_DevonCorp_2F_EventScript_AnorithReady::
 	goto RustboroCity_DevonCorp_2F_EventScript_ReceiveAnorith
 	end
 
+RustboroCity_DevonCorp_2F_EventScript_FossilWrongType::
+	setvar VAR_FOSSIL_RESURRECTION_STATE, 0
+	setflag FLAG_RECEIVED_REVIVED_FOSSIL_MON
+	call Common_EventScript_PokemonEscaped
+	release
+	end
+
 RustboroCity_DevonCorp_2F_EventScript_ReceiveLileep::
 	setvar VAR_TEMP_1, SPECIES_LILEEP
 	givemon SPECIES_LILEEP, 20
 	goto_if_eq VAR_RESULT, MON_GIVEN_TO_PARTY, RustboroCity_DevonCorp_2F_EventScript_ReceiveLileepParty
 	goto_if_eq VAR_RESULT, MON_GIVEN_TO_PC, RustboroCity_DevonCorp_2F_EventScript_ReceiveLileepPC
+	goto_if_eq VAR_RESULT, MON_TYPE_WRONG, RustboroCity_DevonCorp_2F_EventScript_FossilWrongType
 	goto Common_EventScript_NoMoreRoomForPokemon
 	end
 
@@ -193,6 +201,7 @@ RustboroCity_DevonCorp_2F_EventScript_ReceiveAnorith::
 	givemon SPECIES_ANORITH, 20
 	goto_if_eq VAR_RESULT, MON_GIVEN_TO_PARTY, RustboroCity_DevonCorp_2F_EventScript_ReceiveAnorithParty
 	goto_if_eq VAR_RESULT, MON_GIVEN_TO_PC, RustboroCity_DevonCorp_2F_EventScript_ReceiveAnorithPC
+	goto_if_eq VAR_RESULT, MON_TYPE_WRONG, RustboroCity_DevonCorp_2F_EventScript_FossilWrongType
 	goto Common_EventScript_NoMoreRoomForPokemon
 	end
 

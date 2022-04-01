@@ -4,6 +4,7 @@
 #include "battle_anim.h"
 #include "battle_ai_script_commands.h"
 #include "battle_scripts.h"
+#include "battle_main.h"
 #include "item.h"
 #include "util.h"
 #include "pokemon.h"
@@ -9774,6 +9775,8 @@ static void Cmd_removelightscreenreflect(void) // brick break
 static void Cmd_handleballthrow(void)
 {
     u8 ballMultiplier = 0;
+    bool8 monotypeDisable;
+    u8 monotypeType;
 
     if (gBattleControllerExecFlags)
         return;
@@ -9781,11 +9784,21 @@ static void Cmd_handleballthrow(void)
     gActiveBattler = gBattlerAttacker;
     gBattlerTarget = gBattlerAttacker ^ BIT_SIDE;
 
+    monotypeType = VarGet(VAR_MONOTYPE_TYPE);
+    monotypeDisable = monotypeType != TYPE_NONE &&
+        !IsSpeciesOrEvoOfType(gBattleMons[gBattlerTarget].species, monotypeType);
+
     if (gBattleTypeFlags & BATTLE_TYPE_TRAINER)
     {
         BtlController_EmitBallThrowAnim(BUFFER_A, BALL_TRAINER_BLOCK);
         MarkBattlerForControllerExec(gActiveBattler);
         gBattlescriptCurrInstr = BattleScript_TrainerBallBlock;
+    }
+    else if (monotypeDisable)
+    {
+        BtlController_EmitBallThrowAnim(BUFFER_A, BALL_TRAINER_BLOCK);
+        MarkBattlerForControllerExec(gActiveBattler);
+        gBattlescriptCurrInstr = BattleScript_MonoPokeBallBlock;
     }
     else if (gBattleTypeFlags & BATTLE_TYPE_WALLY_TUTORIAL)
     {

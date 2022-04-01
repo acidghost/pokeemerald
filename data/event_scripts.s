@@ -822,6 +822,12 @@ Common_EventScript_PlayerHandedOverTheItem::
 	removeitem VAR_0x8004
 	return
 
+Common_EventScript_PokemonEscaped::
+	playse SE_FLEE
+	msgbox gText_PokemonEscaped, MSGBOX_DEFAULT
+	waitmessage
+	return
+
 	.include "data/scripts/elite_four.inc"
 	.include "data/scripts/movement.inc"
 	.include "data/scripts/check_furniture.inc"
@@ -830,6 +836,9 @@ Common_EventScript_PlayerHandedOverTheItem::
 	.include "data/text/pkmn_center_nurse.inc"
 	.include "data/text/mart_clerk.inc"
 	.include "data/text/obtain_item.inc"
+
+gText_PokemonEscaped::
+	.string "Oh no! It escaped!$"
 
 @ The below and surf.inc could be split into some text/notices.inc
 gText_PokemartSign::

@@ -1,3 +1,4 @@
+#include "constants/pokemon.h"
 #include "global.h"
 #include "malloc.h"
 #include "apprentice.h"
@@ -4369,6 +4370,11 @@ void CopyMon(void *dest, void *src, size_t size)
 u8 GiveMonToPlayer(struct Pokemon *mon)
 {
     s32 i;
+    u16 species;
+    u8 monotypeType, toDelNext = 0, j;
+    u8 idxWrongTypes[PARTY_SIZE];
+
+    monotypeType = VarGet(VAR_MONOTYPE_TYPE);
 
     SetMonData(mon, MON_DATA_OT_NAME, gSaveBlock2Ptr->playerName);
     SetMonData(mon, MON_DATA_OT_GENDER, &gSaveBlock2Ptr->playerGender);
@@ -4376,10 +4382,21 @@ u8 GiveMonToPlayer(struct Pokemon *mon)
 
     for (i = 0; i < PARTY_SIZE; i++)
     {
-        if (GetMonData(&gPlayerParty[i], MON_DATA_SPECIES, NULL) == SPECIES_NONE)
+        species = GetMonData(&gPlayerParty[i], MON_DATA_SPECIES, NULL);
+        if (species == SPECIES_NONE)
             break;
+
+        if (!IsSpeciesOrEvoOfType(species, monotypeType))
+            idxWrongTypes[toDelNext++] = i;
     }
 
+    for (j = 0; j < toDelNext; j++)
+        ZeroMonData(&gPlayerParty[idxWrongTypes[j]]);
+
+    if (toDelNext > 0)
+        CompactPartySlots();
+
+    i -= toDelNext;
     if (i >= PARTY_SIZE)
         return SendMonToPC(mon);
 
@@ -5562,6 +5579,69 @@ u16 GetEvolutionTargetSpecies(struct Pokemon *mon, u8 mode, u16 evolutionItem)
     }
 
     return targetSpecies;
+}
+
+u8 GetEvolutionTypes(u16 species, u8 *types)
+{
+    u16 speciesStack[64];
+    u8 stackNext = 0;
+    u8 typesNext = 0;
+    u8 i, toAdd1, toAdd2;
+
+    types[typesNext++] = gBaseStats[species].type1;
+    if (gBaseStats[species].type1 != gBaseStats[species].type2)
+        types[typesNext++] = gBaseStats[species].type2;
+
+#define ADD_EVOS(evos) {                                                        \
+    for (i = 0; i < EVOS_PER_MON && evos[i].targetSpecies != SPECIES_NONE; i++) \
+        if (evos[i].method != EVO_TRADE && evos[i].method != EVO_TRADE_ITEM)    \
+            speciesStack[stackNext++] = evos[i].targetSpecies;                  \
+}
+
+    ADD_EVOS(gEvolutionTable[species]);
+
+    while (stackNext > 0)
+    {
+        species = speciesStack[--stackNext];
+        toAdd1 = gBaseStats[species].type1;
+        toAdd2 = gBaseStats[species].type2 == gBaseStats[species].type1 ?
+            TYPE_NONE : gBaseStats[species].type2;
+
+        for (i = 0; i < typesNext; i++)
+        {
+            if (types[i] == toAdd1)
+                toAdd1 = TYPE_NONE;
+            else if (types[i] == toAdd2)
+                toAdd2 = TYPE_NONE;
+
+            if (toAdd1 == TYPE_NONE && toAdd2 == TYPE_NONE)
+                break;
+        }
+
+        if (toAdd1 != TYPE_NONE)
+            types[typesNext++] = toAdd1;
+        if (toAdd2 != TYPE_NONE)
+            types[typesNext++] = toAdd2;
+
+        ADD_EVOS(gEvolutionTable[species]);
+    }
+
+#undef ADD_EVOS
+
+    return typesNext;
+}
+
+bool8 IsSpeciesOrEvoOfType(u16 species, u8 type)
+{
+    u8 typesNum, i;
+    u8 types[NUMBER_OF_MON_TYPES];
+
+    typesNum = GetEvolutionTypes(species, types);
+    for (i = 0; i < typesNum; i++)
+        if (types[i] == type)
+            return TRUE;
+
+    return FALSE;
 }
 
 u16 HoennPokedexNumToSpecies(u16 hoennNum)

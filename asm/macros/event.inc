@@ -923,6 +923,17 @@
 	.byte \ignoreBPress
 	.endm
 
+	@ Displays a scrolling multichoice box
+	.macro scrollingmultichoice id:req, x:req, y:req, show:req, b:req
+	setvar VAR_0x8004, \id,
+	setvar VAR_0x8005, \x,
+	setvar VAR_0x8006, \y,
+	setvar VAR_0x8007, \show,
+	setvar VAR_0x8008, \b,
+	callnative ScriptMenu_ScrollingMultichoice
+	waitstate
+	.endm
+
 	@ Nopped in Emerald.
 	.macro drawbox
 	.byte 0x72
